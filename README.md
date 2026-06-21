@@ -21,12 +21,14 @@ This is an in-progress build. The work is split into phases:
 | ----- | ----- | ----- |
 | **0** | Project foundation — Vite + React + TS + Tailwind, app shell, routing, tests | ✅ Done |
 | **1** | **Frequency & Beat Generator** — Web Audio engine, 4 entrainment methods, brainwave selector, ramping, Solfeggio/Schumann presets | ✅ Done |
-| 2 | Ambient sound layer + browsable Frequency Library | ⏳ Next |
-| 3 | Affirmation engine + text-to-speech | Planned |
-| 4 | Session builder + induction / emergence sequences | Planned |
+| **2** | Ambient sound layer + browsable Frequency Library | ✅ Done |
+| **3** | Affirmation engine + text-to-speech | ✅ Done |
+| 4 | Session builder + induction / emergence sequences | ⏳ Next |
 | 5 | Session journal & tracking, offline/PWA, adaptive intelligence | Planned |
 
-### What works today (Phase 1)
+### What works today
+
+**Frequency & Beat Generator (Phase 1)**
 
 - **Four entrainment methods**, each a real Web Audio node graph:
   - **Binaural** — detuned tone per ear (headphones required)
@@ -38,6 +40,21 @@ This is an in-progress build. The work is split into phases:
 - **Frequency ramping** — glide the beat over a session (e.g. Alpha → Theta)
 - **Solfeggio & Schumann presets** as one-tap carrier / beat targets
 - A soft **live visual** pulse and built-in **responsible-use** guidance
+
+**Ambient + Library (Phase 2)**
+
+- **Ambient layer** — browser-generated white/pink/brown noise mixed beneath
+  the beats, with its own volume and tone, toggleable live mid-session
+- **Frequency Library** — searchable 6-category reference with honest
+  evidence-tier tags, bookmarks (saved offline), cross-references, and
+  one-click "load into generator"
+
+**Affirmations + TTS (Phase 3)**
+
+- **Affirmation libraries** — write, tag, edit, weight, and import (.txt/.csv)
+  affirmation sets, persisted locally
+- **Spoken delivery** via the Web Speech API — voice, rate, pitch, volume, plus
+  repetition, linear/shuffle/weighted **sequencing**, and inter-statement gaps
 
 ## Architecture
 
