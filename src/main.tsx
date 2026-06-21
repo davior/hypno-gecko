@@ -8,6 +8,7 @@ import {
 import { AppLayout } from './components/AppLayout'
 import { AboutPage } from './features/about/AboutPage'
 import { GeneratorPage } from './features/generator/GeneratorPage'
+import { LibraryPage } from './features/library/LibraryPage'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/generator" replace /> },
       { path: 'generator', element: <GeneratorPage /> },
+      { path: 'library', element: <LibraryPage /> },
       { path: 'about', element: <AboutPage /> },
       { path: '*', element: <Navigate to="/generator" replace /> },
     ],

@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 
 const NAV = [
   { to: '/generator', label: 'Generator' },
+  { to: '/library', label: 'Library' },
   { to: '/about', label: 'About' },
 ]
 
