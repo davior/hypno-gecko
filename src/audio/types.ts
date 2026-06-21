@@ -75,3 +75,29 @@ export const LIMITS = {
   gateRampMs: { min: 0, max: 80 },
   masterVolume: { min: 0, max: 1 },
 } as const
+
+// --- Ambient Sound Layer (Module 4) -----------------------------------------
+
+export type NoiseType = 'white' | 'pink' | 'brown'
+
+/** An optional environmental texture mixed beneath the beats. */
+export interface AmbientConfig {
+  enabled: boolean
+  type: NoiseType
+  /** Layer level, 0..1 (independent of master volume). */
+  volume: number
+  /** Low-pass cutoff in Hz — lower = softer, darker, more distant. */
+  toneHz: number
+}
+
+export const DEFAULT_AMBIENT: AmbientConfig = {
+  enabled: false,
+  type: 'brown',
+  volume: 0.4,
+  toneHz: 12000,
+}
+
+export const AMBIENT_LIMITS = {
+  volume: { min: 0, max: 1 },
+  toneHz: { min: 200, max: 20000 },
+} as const

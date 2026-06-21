@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 import { AudioEngine, audioEngine, type EngineState } from '../audio/AudioEngine'
 import {
+  DEFAULT_AMBIENT,
   DEFAULT_CONFIG,
+  type AmbientConfig,
   type BeatMethod,
   type BeatRamp,
   type GeneratorConfig,
@@ -9,6 +11,7 @@ import {
 
 interface GeneratorStore {
   config: GeneratorConfig
+  ambient: AmbientConfig
   engineState: EngineState
   supported: boolean
 
@@ -18,6 +21,9 @@ interface GeneratorStore {
   setMethod: (method: BeatMethod) => void
   /** Jump the beat to a band's default frequency. */
   selectBeat: (beatHz: number) => void
+
+  /** Merge a partial patch into the ambient layer (live if playing). */
+  setAmbient: (patch: Partial<AmbientConfig>) => void
 
   play: () => Promise<void>
   stop: () => void
@@ -34,6 +40,7 @@ export const useGenerator = create<GeneratorStore>((set, get) => {
 
   return {
     config: DEFAULT_CONFIG,
+    ambient: DEFAULT_AMBIENT,
     engineState: 'idle',
     supported: AudioEngine.isSupported,
 
@@ -54,7 +61,13 @@ export const useGenerator = create<GeneratorStore>((set, get) => {
       const config = { ...get().config, method }
       set({ config })
       // Method change rebuilds the graph, so restart if currently playing.
-      if (audioEngine.isPlaying) void audioEngine.play(config)
+      if (audioEngine.isPlaying) void audioEngine.play(config, get().ambient)
+    },
+
+    setAmbient: (patch) => {
+      const ambient = { ...get().ambient, ...patch }
+      set({ ambient })
+      audioEngine.setAmbient(ambient)
     },
 
     selectBeat: (beatHz) => {
@@ -64,12 +77,12 @@ export const useGenerator = create<GeneratorStore>((set, get) => {
     },
 
     play: async () => {
-      await audioEngine.play(get().config)
+      await audioEngine.play(get().config, get().ambient)
     },
     stop: () => audioEngine.stop(),
     toggle: async () => {
       if (audioEngine.isPlaying) audioEngine.stop()
-      else await audioEngine.play(get().config)
+      else await audioEngine.play(get().config, get().ambient)
     },
   }
 })

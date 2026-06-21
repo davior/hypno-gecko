@@ -1,5 +1,6 @@
+import { AmbientLayer } from './layers/AmbientLayer'
 import { clamp, rampedBeatAt } from './beatMath'
-import type { GeneratorConfig } from './types'
+import type { AmbientConfig, GeneratorConfig } from './types'
 import { createVoice, type Voice } from './voices'
 
 export type EngineState = 'idle' | 'playing'
@@ -22,6 +23,9 @@ export class AudioEngine {
   private rampStartAt = 0
   private rampFromBeat = 0
   private config: GeneratorConfig | null = null
+
+  private ambient: AmbientLayer | null = null
+  private ambientConfig: AmbientConfig | null = null
 
   /** Whether the Web Audio API is available in this environment. */
   static get isSupported(): boolean {
@@ -63,16 +67,23 @@ export class AudioEngine {
   }
 
   /** Start (or restart) playback with the given configuration. */
-  async play(config: GeneratorConfig): Promise<void> {
+  async play(config: GeneratorConfig, ambient?: AmbientConfig): Promise<void> {
     const ctx = this.ensureContext()
     if (ctx.state === 'suspended') await ctx.resume()
 
     this.teardownVoice()
+    this.disposeAmbientNow()
     this.config = config
 
     this.voice = createVoice(ctx, config)
     this.voice.output.connect(this.master!)
     this.voice.start()
+
+    const amb = ambient ?? this.ambientConfig
+    if (amb) {
+      this.ambientConfig = amb
+      if (amb.enabled) this.buildAmbient(amb)
+    }
 
     // Soft fade-in to avoid a click.
     const now = ctx.currentTime
@@ -113,20 +124,98 @@ export class AudioEngine {
       this.master.gain.setValueAtTime(this.master.gain.value, now)
       this.master.gain.linearRampToValueAtTime(0, now + 0.08)
     }
-    // Defer voice teardown until after the fade so we don't click.
+    // Defer teardown until after the fade so we don't click.
     const voice = this.voice
+    const ambient = this.ambient
     this.voice = null
-    if (voice) {
-      window.setTimeout(() => {
+    this.ambient = null
+    window.setTimeout(() => {
+      if (voice) {
         try {
           voice.stop()
         } catch {
           // already stopped
         }
         voice.dispose()
-      }, 120)
-    }
+      }
+      if (ambient) {
+        try {
+          ambient.stop()
+        } catch {
+          // already stopped
+        }
+        ambient.dispose()
+      }
+    }, 140)
     this.setState('idle')
+  }
+
+  // --- Ambient layer (Module 4) ---
+
+  /** Add, update, or remove the ambient layer live (or store for next play). */
+  setAmbient(ambient: AmbientConfig): void {
+    this.ambientConfig = ambient
+    if (!this.isPlaying || !this.ctx) return
+
+    if (!ambient.enabled) {
+      this.fadeOutAmbient()
+      return
+    }
+    if (!this.ambient) {
+      this.buildAmbient(ambient)
+    } else if (this.ambient.type !== ambient.type) {
+      this.fadeOutAmbient()
+      this.buildAmbient(ambient)
+    } else {
+      this.ambient.update(ambient)
+    }
+  }
+
+  private buildAmbient(ambient: AmbientConfig): void {
+    if (!this.ctx || !this.master) return
+    const layer = new AmbientLayer(this.ctx, ambient)
+    layer.output.connect(this.master)
+    layer.start()
+    // Fade the layer in independently of the master.
+    const g = layer.output.gain
+    const now = this.ctx.currentTime
+    g.cancelScheduledValues(now)
+    g.setValueAtTime(0, now)
+    g.linearRampToValueAtTime(clamp(ambient.volume, 0, 1), now + 0.4)
+    this.ambient = layer
+  }
+
+  private fadeOutAmbient(): void {
+    const layer = this.ambient
+    this.ambient = null
+    if (!layer) return
+    if (this.ctx) {
+      const g = layer.output.gain
+      const now = this.ctx.currentTime
+      g.cancelScheduledValues(now)
+      g.setValueAtTime(g.value, now)
+      g.linearRampToValueAtTime(0, now + 0.25)
+    }
+    window.setTimeout(() => {
+      try {
+        layer.stop()
+      } catch {
+        // already stopped
+      }
+      layer.dispose()
+    }, 300)
+  }
+
+  private disposeAmbientNow(): void {
+    if (this.ambient) {
+      try {
+        this.ambient.stop()
+      } catch {
+        // already stopped
+      }
+      this.ambient.dispose()
+      this.ambient = null
+    }
   }
 
   private teardownVoice(): void {
@@ -190,6 +279,7 @@ export class AudioEngine {
 
   dispose(): void {
     this.teardownVoice()
+    this.disposeAmbientNow()
     this.listeners.clear()
     if (this.ctx) {
       void this.ctx.close()

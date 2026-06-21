@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { LIMITS } from '../../audio/types'
 import { Slider } from '../../components/ui/Slider'
 import { useGenerator } from '../../state/generatorStore'
+import { AmbientPanel } from './AmbientPanel'
 import { BandSelector } from './BandSelector'
 import { LiveVisual } from './LiveVisual'
 import { MethodParams } from './MethodParams'
@@ -112,6 +113,10 @@ export function GeneratorPage() {
 
           <Panel title="Ramp">
             <RampPanel />
+          </Panel>
+
+          <Panel title="Ambient" desc="Optional sound bed (Module 4).">
+            <AmbientPanel />
           </Panel>
 
           <Panel
