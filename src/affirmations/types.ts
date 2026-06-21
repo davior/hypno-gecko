@@ -67,3 +67,21 @@ export const SEQUENCING_INFO: Record<Sequencing, { label: string; hint: string }
     hint: 'Higher-weight affirmations repeat more often.',
   },
 }
+
+// --- Text-to-speech engine selection ----------------------------------------
+
+export type TtsEngine = 'browser' | 'deepgram'
+
+export interface TtsConfig {
+  engine: TtsEngine
+  /** Deepgram API key (user-supplied, stored locally). */
+  deepgramKey: string
+  /** Deepgram Aura voice model id. */
+  deepgramModel: string
+}
+
+export const DEFAULT_TTS: TtsConfig = {
+  engine: 'browser',
+  deepgramKey: '',
+  deepgramModel: 'aura-asteria-en',
+}

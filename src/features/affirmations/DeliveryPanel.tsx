@@ -6,16 +6,20 @@ import {
 import { Segmented } from '../../components/ui/Segmented'
 import { Slider } from '../../components/ui/Slider'
 import { useAffirmations } from '../../state/affirmationStore'
+import { TtsEnginePanel } from './TtsEnginePanel'
 
 export function DeliveryPanel({
   voices,
-  supported,
+  browserSupported,
+  voicesChecked,
 }: {
   voices: SpeechSynthesisVoice[]
-  supported: boolean
+  browserSupported: boolean
+  voicesChecked: boolean
 }) {
   const delivery = useAffirmations((s) => s.delivery)
   const setDelivery = useAffirmations((s) => s.setDelivery)
+  const engine = useAffirmations((s) => s.tts.engine)
 
   return (
     <div className="space-y-5">
@@ -89,32 +93,38 @@ export function DeliveryPanel({
         />
       </div>
 
-      <div className="space-y-1.5">
-        <label className="label" htmlFor="voice-select">
-          Voice
-        </label>
-        {supported && voices.length > 0 ? (
-          <select
-            id="voice-select"
-            value={delivery.voiceURI ?? ''}
-            onChange={(e) => setDelivery({ voiceURI: e.target.value || null })}
-            className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-inset ring-white/10 focus:ring-violet/60"
-          >
-            <option value="">System default</option>
-            {voices.map((v) => (
-              <option key={v.voiceURI} value={v.voiceURI}>
-                {v.name} ({v.lang})
-              </option>
-            ))}
-          </select>
-        ) : (
-          <p className="text-xs text-slate-500">
-            {supported
-              ? 'Loading system voices…'
-              : 'Text-to-speech isn’t available in this browser.'}
-          </p>
-        )}
-      </div>
+      {engine === 'browser' && (
+        <div className="space-y-1.5">
+          <label className="label" htmlFor="voice-select">
+            System voice
+          </label>
+          {browserSupported && voices.length > 0 ? (
+            <select
+              id="voice-select"
+              value={delivery.voiceURI ?? ''}
+              onChange={(e) => setDelivery({ voiceURI: e.target.value || null })}
+              className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none ring-1 ring-inset ring-white/10 focus:ring-violet/60"
+            >
+              <option value="">System default</option>
+              {voices.map((v) => (
+                <option key={v.voiceURI} value={v.voiceURI}>
+                  {v.name} ({v.lang})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-xs text-slate-500">
+              {!browserSupported
+                ? 'Text-to-speech isn’t available in this browser.'
+                : voicesChecked
+                  ? 'No system voices found (common in Firefox on Linux). Switch to Deepgram below.'
+                  : 'Loading system voices…'}
+            </p>
+          )}
+        </div>
+      )}
+
+      <TtsEnginePanel />
     </div>
   )
 }

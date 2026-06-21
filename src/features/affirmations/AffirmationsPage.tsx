@@ -3,43 +3,70 @@ import {
   AffirmationPlayer,
   type PlayerProgress,
 } from '../../affirmations/AffirmationPlayer'
+import { DeepgramSpeaker } from '../../affirmations/DeepgramSpeaker'
 import { buildPlaylist } from '../../affirmations/sequencing'
-import { WebSpeechSpeaker } from '../../affirmations/speech'
+import { WebSpeechSpeaker, type Speaker } from '../../affirmations/speech'
 import { useAffirmations } from '../../state/affirmationStore'
 import { AffirmationEditor } from './AffirmationEditor'
 import { DeliveryPanel } from './DeliveryPanel'
-import { PlayerBar } from './PlayerBar'
+import { PlayerBar, type PlayerNotice } from './PlayerBar'
 import { SetSidebar } from './SetSidebar'
 
 export function AffirmationsPage() {
   const sets = useAffirmations((s) => s.sets)
   const activeSetId = useAffirmations((s) => s.activeSetId)
   const delivery = useAffirmations((s) => s.delivery)
+  const tts = useAffirmations((s) => s.tts)
 
-  const speaker = useMemo(() => new WebSpeechSpeaker(), [])
-  const supported = WebSpeechSpeaker.isSupported
+  const browserSupported = WebSpeechSpeaker.isSupported
   const playerRef = useRef<AffirmationPlayer | null>(null)
 
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [voicesChecked, setVoicesChecked] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState<PlayerProgress | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const speaker: Speaker = useMemo(() => {
+    if (tts.engine === 'deepgram') {
+      return new DeepgramSpeaker({
+        apiKey: tts.deepgramKey,
+        model: tts.deepgramModel,
+      })
+    }
+    return new WebSpeechSpeaker()
+  }, [tts.engine, tts.deepgramKey, tts.deepgramModel])
 
   const activeSet = sets.find((s) => s.id === activeSetId) ?? sets[0]
   const count = activeSet?.affirmations.length ?? 0
 
-  // Load Web Speech voices (they arrive asynchronously).
+  // Load browser voices (they arrive asynchronously) when using that engine.
   useEffect(() => {
-    if (!supported) return
-    const load = () => setVoices(speaker.getVoices())
+    if (tts.engine !== 'browser' || !browserSupported) {
+      setVoicesChecked(true)
+      return
+    }
+    setVoicesChecked(false)
+    const load = () => setVoices(window.speechSynthesis.getVoices())
     load()
     window.speechSynthesis.addEventListener('voiceschanged', load)
-    return () => window.speechSynthesis.removeEventListener('voiceschanged', load)
-  }, [supported, speaker])
+    const timer = window.setTimeout(() => setVoicesChecked(true), 1500)
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', load)
+      window.clearTimeout(timer)
+    }
+  }, [tts.engine, browserSupported])
 
-  // Stop any speech when leaving the page.
+  // Stop playback when leaving the page or switching engines mid-session.
   useEffect(() => {
     return () => playerRef.current?.stop()
-  }, [])
+  }, [speaker])
+
+  const playable =
+    count > 0 &&
+    (tts.engine === 'deepgram'
+      ? tts.deepgramKey.trim().length > 0
+      : browserSupported)
 
   const handleToggle = async () => {
     if (playing) {
@@ -53,10 +80,29 @@ export function AffirmationsPage() {
 
     const player = new AffirmationPlayer(speaker)
     playerRef.current = player
+    setError(null)
     setPlaying(true)
-    await player.play(playlist, delivery, setProgress)
-    setPlaying(false)
+    try {
+      await player.play(playlist, delivery, setProgress)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Playback failed.')
+    } finally {
+      setPlaying(false)
+    }
   }
+
+  const notice: PlayerNotice | null = error
+    ? { tone: 'error', text: error }
+    : tts.engine === 'deepgram' && tts.deepgramKey.trim().length === 0
+      ? { tone: 'warn', text: 'Enter your Deepgram API key to enable playback.' }
+      : tts.engine === 'browser' && !browserSupported
+        ? { tone: 'warn', text: 'Text-to-speech isn’t available in this browser.' }
+        : tts.engine === 'browser' && voicesChecked && voices.length === 0
+          ? {
+              tone: 'warn',
+              text: 'No system voices found (common in Firefox on Linux). Switch to Deepgram, or install OS voices.',
+            }
+          : null
 
   return (
     <div className="space-y-5">
@@ -83,16 +129,21 @@ export function AffirmationsPage() {
                 How the affirmations are spoken (Module 2 — Text-to-Speech).
               </p>
             </div>
-            <DeliveryPanel voices={voices} supported={supported} />
+            <DeliveryPanel
+              voices={voices}
+              browserSupported={browserSupported}
+              voicesChecked={voicesChecked}
+            />
           </div>
         </div>
       </div>
 
       <PlayerBar
-        supported={supported}
+        playable={playable}
         playing={playing}
         progress={progress}
         count={count}
+        notice={notice}
         onToggle={handleToggle}
       />
     </div>

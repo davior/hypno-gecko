@@ -1,5 +1,10 @@
 import type { PlayerProgress } from '../../affirmations/AffirmationPlayer'
 
+export interface PlayerNotice {
+  tone: 'warn' | 'error'
+  text: string
+}
+
 function PlayIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
@@ -17,16 +22,18 @@ function StopIcon() {
 }
 
 export function PlayerBar({
-  supported,
+  playable,
   playing,
   progress,
   count,
+  notice,
   onToggle,
 }: {
-  supported: boolean
+  playable: boolean
   playing: boolean
   progress: PlayerProgress | null
   count: number
+  notice: PlayerNotice | null
   onToggle: () => void
 }) {
   const speaking = playing && progress && !progress.done ? progress.text : null
@@ -37,7 +44,7 @@ export function PlayerBar({
         <button
           type="button"
           onClick={onToggle}
-          disabled={!supported || count === 0}
+          disabled={!playable}
           className={[
             'btn h-12 w-12 shrink-0 rounded-full p-0 text-night-950 shadow-lg',
             playing ? 'bg-rose hover:bg-rose/90' : 'bg-mint hover:bg-mint/90',
@@ -65,9 +72,14 @@ export function PlayerBar({
         </div>
       </div>
 
-      {!supported && (
-        <p className="mt-2 text-center text-xs text-rose">
-          Text-to-speech isn’t available in this browser — playback is disabled.
+      {notice && (
+        <p
+          className={[
+            'mt-2 text-center text-xs',
+            notice.tone === 'error' ? 'text-rose' : 'text-ember',
+          ].join(' ')}
+        >
+          {notice.text}
         </p>
       )}
     </div>

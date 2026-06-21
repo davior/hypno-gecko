@@ -3,9 +3,11 @@ import { persist } from 'zustand/middleware'
 import type { ParsedAffirmation } from '../affirmations/parse'
 import {
   DEFAULT_DELIVERY,
+  DEFAULT_TTS,
   type Affirmation,
   type AffirmationSet,
   type DeliveryConfig,
+  type TtsConfig,
 } from '../affirmations/types'
 import { uid } from '../utils/id'
 
@@ -34,6 +36,7 @@ interface AffirmationStore {
   sets: AffirmationSet[]
   activeSetId: string | null
   delivery: DeliveryConfig
+  tts: TtsConfig
 
   createSet: (name: string) => string
   renameSet: (id: string, name: string) => void
@@ -51,6 +54,7 @@ interface AffirmationStore {
   importToSet: (setId: string, parsed: ParsedAffirmation[]) => void
 
   setDelivery: (patch: Partial<DeliveryConfig>) => void
+  setTts: (patch: Partial<TtsConfig>) => void
 }
 
 export const useAffirmations = create<AffirmationStore>()(
@@ -70,6 +74,7 @@ export const useAffirmations = create<AffirmationStore>()(
         sets: [seedSet()],
         activeSetId: null,
         delivery: DEFAULT_DELIVERY,
+        tts: DEFAULT_TTS,
 
         createSet: (name) => {
           const now = Date.now()
@@ -141,6 +146,9 @@ export const useAffirmations = create<AffirmationStore>()(
 
         setDelivery: (patch) =>
           set((state) => ({ delivery: { ...state.delivery, ...patch } })),
+
+        setTts: (patch) =>
+          set((state) => ({ tts: { ...state.tts, ...patch } })),
       }
     },
     {

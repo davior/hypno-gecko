@@ -98,7 +98,26 @@ Then open the printed URL and press play (start at a low volume).
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 
+## Browser support
+
+Works in current **Chrome, Edge, Firefox, and Safari**. The Generator, Library,
+and affirmation editing are fully cross-browser (built on the standard Web Audio
+API).
+
+**Text-to-speech** has two engines:
+
+- **Browser (Web Speech API)** — uses your operating system's installed voices.
+  Quality and availability vary by OS/browser; **Firefox on Linux often ships no
+  voices at all**. Playback never hangs — a watchdog always advances the
+  sequence — and the UI tells you when no voices are found.
+- **Deepgram (optional)** — paste your own [Deepgram](https://deepgram.com) API
+  key to use their cloud Aura voices, which work in any browser regardless of OS
+  voices. Affirmation text is sent to Deepgram to synthesise speech (so it needs
+  a network connection); the key is stored only in your browser's local storage.
+  Note: if Deepgram blocks direct browser (CORS) requests for your account, the
+  call fails with a clear message and a small proxy would be needed.
+
 ## Tech
 
-React 18 · TypeScript · Vite · Tailwind CSS · Zustand · Web Audio API · Vitest.
-The Phase 1 core is fully client-side and needs no backend.
+React 18 · TypeScript · Vite · Tailwind CSS · Zustand · Web Audio API ·
+Web Speech / Deepgram TTS · Vitest. Fully client-side — no backend required.
