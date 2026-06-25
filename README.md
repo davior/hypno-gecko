@@ -23,8 +23,11 @@ This is an in-progress build. The work is split into phases:
 | **1** | **Frequency & Beat Generator** — Web Audio engine, 4 entrainment methods, brainwave selector, ramping, Solfeggio/Schumann presets | ✅ Done |
 | **2** | Ambient sound layer + browsable Frequency Library | ✅ Done |
 | **3** | Affirmation engine + text-to-speech | ✅ Done |
-| 4 | Session builder + induction / emergence sequences | ⏳ Next |
-| 5 | Session journal & tracking, offline/PWA, adaptive intelligence | Planned |
+| **4** | Session builder + induction / emergence (orchestration, templates, JSON, WAV export) | ✅ Done |
+| 5 | Session journal & tracking, offline/PWA, adaptive intelligence | ⏳ Next |
+
+_Phase 4 follow-ups (4b): full drag/resize DAW timeline, MP3/FLAC export, and
+spoken affirmations baked into exported audio._
 
 ### What works today
 
@@ -55,6 +58,14 @@ This is an in-progress build. The work is split into phases:
   affirmation sets, persisted locally
 - **Spoken delivery** via the Web Speech API — voice, rate, pitch, volume, plus
   repetition, linear/shuffle/weighted **sequencing**, and inter-statement gaps
+
+**Session Builder (Phase 4)**
+
+- **Guided sessions** — induction → main → emergence orchestrated over a live
+  timeline (spoken countdown / PMR / breathing inductions, a beat-sweep, timed
+  affirmations through the main block, and a count-up emergence)
+- **6 prebuilt templates**, **JSON** save/load, and **WAV export** of the
+  beat+ambient bed (rendered offline via `OfflineAudioContext`)
 
 ## Architecture
 

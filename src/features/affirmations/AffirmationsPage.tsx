@@ -3,9 +3,9 @@ import {
   AffirmationPlayer,
   type PlayerProgress,
 } from '../../affirmations/AffirmationPlayer'
-import { DeepgramSpeaker } from '../../affirmations/DeepgramSpeaker'
+import { createSpeaker } from '../../affirmations/createSpeaker'
 import { buildPlaylist } from '../../affirmations/sequencing'
-import { WebSpeechSpeaker, type Speaker } from '../../affirmations/speech'
+import { WebSpeechSpeaker } from '../../affirmations/speech'
 import { useAffirmations } from '../../state/affirmationStore'
 import { AffirmationEditor } from './AffirmationEditor'
 import { DeliveryPanel } from './DeliveryPanel'
@@ -27,15 +27,7 @@ export function AffirmationsPage() {
   const [progress, setProgress] = useState<PlayerProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const speaker: Speaker = useMemo(() => {
-    if (tts.engine === 'deepgram') {
-      return new DeepgramSpeaker({
-        apiKey: tts.deepgramKey,
-        model: tts.deepgramModel,
-      })
-    }
-    return new WebSpeechSpeaker()
-  }, [tts.engine, tts.deepgramKey, tts.deepgramModel])
+  const speaker = useMemo(() => createSpeaker(tts), [tts])
 
   const activeSet = sets.find((s) => s.id === activeSetId) ?? sets[0]
   const count = activeSet?.affirmations.length ?? 0

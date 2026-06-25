@@ -10,6 +10,7 @@ import { AboutPage } from './features/about/AboutPage'
 import { AffirmationsPage } from './features/affirmations/AffirmationsPage'
 import { GeneratorPage } from './features/generator/GeneratorPage'
 import { LibraryPage } from './features/library/LibraryPage'
+import { SessionPage } from './features/session/SessionPage'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/generator" replace /> },
       { path: 'generator', element: <GeneratorPage /> },
+      { path: 'sessions', element: <SessionPage /> },
       { path: 'affirmations', element: <AffirmationsPage /> },
       { path: 'library', element: <LibraryPage /> },
       { path: 'about', element: <AboutPage /> },
